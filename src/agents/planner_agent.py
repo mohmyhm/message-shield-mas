@@ -6,16 +6,20 @@ from src.schema import AgentRole, Message, TaskRecord
 
 class PlannerAgent(BaseAgent):
     def __init__(self):
-        super().__init__(name="Planner Agent", role=AgentRole.PLANNER)
+        super().__init__(AgentRole.PLANNER)
 
     def plan(self, task: TaskRecord) -> Message:
         content = (
-            f"Plan for task {task.task_id}: "
-            f"Understand the user goal, break it into steps, and send clear instructions to the executor. "
-            f"User goal: {task.user_goal}"
+            "Create a short draft that follows these constraints: "
+            f"{', '.join(task.constraints)}. "
+            "Include these expected ideas where appropriate: "
+            f"{', '.join(task.expected_keywords)}. "
+            f"User request: {task.user_input}"
         )
+
         return self.create_message(
-            receiver=AgentRole.EXECUTOR,
+            task_id=task.task_id,
+            destination_agent=AgentRole.EXECUTOR,
+            stage="planning",
             content=content,
-            metadata={"task_id": task.task_id, "stage": "planning"},
         )

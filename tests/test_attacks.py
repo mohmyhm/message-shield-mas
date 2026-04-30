@@ -1,37 +1,29 @@
 from src.attacks.attack_registry import get_attack
-from src.attacks.authority_attack import AuthorityAttack
-from src.attacks.rewrite_attack import RewriteAttack
-from src.schema import AgentRole, AttackType, Message, SecurityLabel
+from src.schema import AgentRole, Message
 
 
 def sample_message():
     return Message(
-        message_id="msg_test",
-        sender=AgentRole.PLANNER,
-        receiver=AgentRole.EXECUTOR,
-        content="Please complete the assigned task safely.",
+        task_id="task_test",
+        source_agent=AgentRole.PLANNER,
+        destination_agent=AgentRole.EXECUTOR,
+        stage="planning",
+        content="Create a safe password reset policy.",
     )
 
 
-def test_rewrite_attack_changes_message():
-    attack = RewriteAttack()
-    attacked = attack.apply(sample_message())
-
-    assert "Ignore previous instructions" in attacked.content
-    assert attacked.attack_type == AttackType.REWRITE
-    assert attacked.security_label == SecurityLabel.MALICIOUS
-    assert attacked.metadata["attack_applied"] is True
-
-
-def test_authority_attack_changes_message():
-    attack = AuthorityAttack()
-    attacked = attack.apply(sample_message())
-
-    assert "System administrator override" in attacked.content
-    assert attacked.attack_type == AttackType.AUTHORITY
-    assert attacked.security_label == SecurityLabel.MALICIOUS
-
-
-def test_attack_registry_loads_attack():
+def test_rewrite_attack_returns_tampered_message_and_record():
     attack = get_attack("rewrite_attack")
-    assert isinstance(attack, RewriteAttack)
+    tampered, record = attack.apply(sample_message(), "planner_to_executor")
+
+    assert "emergency bypass" in tampered.content
+    assert record.attack_applied is True
+    assert record.attack_name == "rewrite_attack"
+
+
+def test_authority_attack_returns_tampered_message_and_record():
+    attack = get_attack("authority_attack")
+    tampered, record = attack.apply(sample_message(), "executor_to_reviewer")
+
+    assert "system admin" in tampered.content.lower()
+    assert record.attack_name == "authority_attack"

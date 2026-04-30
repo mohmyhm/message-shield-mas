@@ -1,35 +1,26 @@
-"""Policy engine for converting risk scores into decisions."""
+"""Policy decision engine."""
 
 from src.config import load_runtime_policy
-from src.schema import MonitorDecision
+from src.schema import PolicyDecision
 
 
 class PolicyEngine:
-    def __init__(
-        self,
-        warn_threshold: float | None = None,
-        block_threshold: float | None = None,
-    ):
-        config = load_runtime_policy()
-        monitor_config = config.get("runtime_monitor", {})
+    def __init__(self, policy_config: dict | None = None):
+        self.policy_config = policy_config or load_runtime_policy()
+        self.thresholds = self.policy_config.get("thresholds", {})
 
-        self.warn_threshold = (
-            warn_threshold
-            if warn_threshold is not None
-            else float(monitor_config.get("warn_threshold", 0.30))
-        )
+    def decide(self, risk_score: float) -> PolicyDecision:
+        confirm_threshold = float(self.thresholds.get("confirm", 0.75))
+        annotate_threshold = float(self.thresholds.get("annotate", 0.50))
+        pass_threshold = float(self.thresholds.get("pass", 0.25))
 
-        self.block_threshold = (
-            block_threshold
-            if block_threshold is not None
-            else float(monitor_config.get("block_threshold", 0.80))
-        )
+        if risk_score >= confirm_threshold:
+            return PolicyDecision.QUARANTINE
 
-    def decide(self, risk_score: float) -> MonitorDecision:
-        if risk_score >= self.block_threshold:
-            return MonitorDecision.BLOCK
+        if risk_score >= annotate_threshold:
+            return PolicyDecision.CONFIRM
 
-        if risk_score >= self.warn_threshold:
-            return MonitorDecision.WARN
+        if risk_score >= pass_threshold:
+            return PolicyDecision.ANNOTATE
 
-        return MonitorDecision.ALLOW
+        return PolicyDecision.PASS

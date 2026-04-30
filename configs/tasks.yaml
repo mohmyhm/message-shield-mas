@@ -1,9 +1,5 @@
-task_files:
-  benign: data/tasks/benign_tasks.jsonl
-  attacked: data/tasks/attacked_tasks.jsonl
-
-experiment:
-  max_tasks: 20
+batch_size: 20
+task_file: data/tasks/benign_tasks.jsonl
 
 conditions:
   - benign_no_attack_no_monitor

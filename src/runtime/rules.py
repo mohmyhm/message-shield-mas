@@ -1,44 +1,60 @@
-"""Runtime detection rules for suspicious inter-agent messages."""
+"""Rule-based runtime monitor checks."""
 
 from src.config import load_runtime_policy
+from src.schema import Message, TaskRecord
 
 
-def contains_any_pattern(text: str, patterns: list[str]) -> bool:
-    lowered = text.lower()
+def _contains_any(content: str, patterns: list[str]) -> bool:
+    lowered = content.lower()
     return any(pattern.lower() in lowered for pattern in patterns)
 
 
-def evaluate_message_rules(text: str, policy_config: dict | None = None) -> tuple[float, list[str]]:
+def evaluate_message_rules(
+    message: Message,
+    task: TaskRecord,
+    policy_config: dict | None = None,
+) -> tuple[float, list[str]]:
     policy_config = policy_config or load_runtime_policy()
-    blocked_patterns = policy_config.get("blocked_patterns", {})
+    rules = policy_config.get("rules", {})
 
-    triggered_rules = []
-    risk_score = 0.0
+    rule_hits = []
+    forbidden_keyword_hits = 0
 
-    for rule_name, rule_data in blocked_patterns.items():
+    content_lower = message.content.lower()
+
+    for rule_name in [
+        "authority_escalation",
+        "unsafe_override",
+        "instruction_conflict",
+    ]:
+        rule_data = rules.get(rule_name, {})
         patterns = rule_data.get("patterns", [])
-        weight = float(rule_data.get("weight", 0.0))
 
-        if contains_any_pattern(text, patterns):
-            triggered_rules.append(rule_name)
-            risk_score += weight
+        if _contains_any(message.content, patterns):
+            rule_hits.append(rule_name)
 
-    return min(risk_score, 1.0), triggered_rules
+    role_rule = rules.get("role_mismatch", {})
+    role = message.source_agent.value
 
+    if role == "planner" and _contains_any(message.content, role_rule.get("planner_forbidden", [])):
+        rule_hits.append("role_mismatch")
 
-def contains_instruction_override(text: str) -> bool:
-    policy = load_runtime_policy()
-    patterns = policy["blocked_patterns"]["instruction_override"]["patterns"]
-    return contains_any_pattern(text, patterns)
+    if role == "executor" and _contains_any(message.content, role_rule.get("executor_forbidden", [])):
+        rule_hits.append("role_mismatch")
 
+    if role == "reviewer" and _contains_any(message.content, role_rule.get("reviewer_forbidden", [])):
+        rule_hits.append("role_mismatch")
 
-def contains_fake_authority(text: str) -> bool:
-    policy = load_runtime_policy()
-    patterns = policy["blocked_patterns"]["fake_authority"]["patterns"]
-    return contains_any_pattern(text, patterns)
+    for keyword in task.forbidden_keywords:
+        if keyword.lower() in content_lower:
+            forbidden_keyword_hits += 1
 
+    if forbidden_keyword_hits > 0:
+        rule_hits.append("forbidden_keyword")
 
-def contains_safety_bypass(text: str) -> bool:
-    policy = load_runtime_policy()
-    patterns = policy["blocked_patterns"]["safety_bypass"]["patterns"]
-    return contains_any_pattern(text, patterns)
+    risk_score = min(
+        1.0,
+        0.20 * len(set(rule_hits)) + 0.15 * forbidden_keyword_hits,
+    )
+
+    return risk_score, sorted(set(rule_hits))
