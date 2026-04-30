@@ -23,10 +23,30 @@ def test_benign_workflow_completes(tmp_path):
     trace = workflow.run(task)
 
     assert trace.final_status == "completed"
+    assert trace.task_success is True
+    assert trace.attack_success is False
     assert len(trace.rows) == 2
 
 
-def test_attacked_monitored_workflow_quarantines(tmp_path):
+def test_attacked_without_monitor_corrupts_output(tmp_path):
+    task = load_first_task()
+
+    workflow = LinearWorkflow(
+        condition="attacked_no_monitor",
+        attack=get_attack("rewrite_attack"),
+        attack_insertion_point="planner_to_executor",
+        monitor=None,
+        trace_output_dir=str(tmp_path),
+    )
+
+    trace = workflow.run(task)
+
+    assert trace.final_status == "completed"
+    assert trace.task_success is False
+    assert trace.attack_success is True
+
+
+def test_attacked_with_monitor_repairs_and_preserves_task(tmp_path):
     task = load_first_task()
 
     workflow = LinearWorkflow(
@@ -39,6 +59,9 @@ def test_attacked_monitored_workflow_quarantines(tmp_path):
 
     trace = workflow.run(task)
 
-    assert trace.final_status == "quarantined_at_planner_to_executor"
-    assert trace.task_success is False
+    decisions = [row.monitor["policy_decision"] for row in trace.rows]
+
+    assert trace.final_status == "completed"
+    assert "quarantine" in decisions
+    assert trace.task_success is True
     assert trace.attack_success is False

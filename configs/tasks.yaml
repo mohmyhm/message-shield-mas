@@ -3,5 +3,6 @@ task_file: data/tasks/benign_tasks.jsonl
 
 conditions:
   - benign_no_attack_no_monitor
+  - benign_with_monitor
   - attacked_no_monitor
   - attacked_with_monitor
