@@ -1,0 +1,10 @@
+task_files:
+  benign: data/tasks/benign_tasks.jsonl
+  attacked: data/tasks/attacked_tasks.jsonl
+
+workflow:
+  topology: linear
+  agents:
+    - planner
+    - executor
+    - reviewer

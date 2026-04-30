@@ -1,0 +1,14 @@
+[project]
+name = "message-shield-mas"
+version = "0.1.0"
+description = "Runtime message-level security monitor for LLM-based multi-agent systems."
+readme = "README.md"
+requires-python = ">=3.10"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-q"
+
+[tool.coverage.run]
+source = ["src"]
