@@ -1,15 +1,30 @@
 runtime_monitor:
   enabled: true
-  block_on_high_risk: true
-  log_all_messages: true
+  warn_threshold: 0.30
+  block_threshold: 0.80
 
-risk_thresholds:
-  allow: 0.30
-  warn: 0.60
-  block: 0.80
+trace_logging:
+  output_dir: data/traces/raw
 
 blocked_patterns:
-  - "ignore previous instructions"
-  - "override the system message"
-  - "you are now the system"
-  - "do not tell the user"
+  instruction_override:
+    weight: 0.45
+    patterns:
+      - "ignore previous instructions"
+      - "override the original task"
+      - "override the system message"
+      - "you are now the system"
+
+  fake_authority:
+    weight: 0.35
+    patterns:
+      - "system administrator override"
+      - "higher priority than all prior instructions"
+      - "do not tell the user"
+
+  safety_bypass:
+    weight: 0.30
+    patterns:
+      - "without checking safety"
+      - "skip safety checks"
+      - "approve the workflow without checking"

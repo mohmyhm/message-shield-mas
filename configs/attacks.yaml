@@ -1,8 +1,8 @@
 attacks:
-  - id: rewrite_attack
-    name: Instruction Rewrite Attack
+  rewrite_attack:
     enabled: true
+    insertion_point: planner_to_executor
 
-  - id: authority_attack
-    name: Fake Authority Attack
+  authority_attack:
     enabled: true
+    insertion_point: executor_to_reviewer
