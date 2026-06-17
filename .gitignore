@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Environments
+.env
+.venv/
+venv/
+env/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Data outputs
+data/traces/raw/*.jsonl
+data/traces/processed/*.jsonl
+data/reports/*.csv
+data/reports/*.json
+data/reports/*.md
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/

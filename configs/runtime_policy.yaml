@@ -1,0 +1,15 @@
+runtime_monitor:
+  enabled: true
+  block_on_high_risk: true
+  log_all_messages: true
+
+risk_thresholds:
+  allow: 0.30
+  warn: 0.60
+  block: 0.80
+
+blocked_patterns:
+  - "ignore previous instructions"
+  - "override the system message"
+  - "you are now the system"
+  - "do not tell the user"

@@ -1,0 +1,8 @@
+attacks:
+  - id: rewrite_attack
+    name: Instruction Rewrite Attack
+    enabled: true
+
+  - id: authority_attack
+    name: Fake Authority Attack
+    enabled: true
