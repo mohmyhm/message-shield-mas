@@ -13,4 +13,5 @@ ATTACK_REGISTRY = {
 def get_attack(name: str):
     if name not in ATTACK_REGISTRY:
         raise ValueError(f"Unknown attack: {name}")
+
     return ATTACK_REGISTRY[name]()

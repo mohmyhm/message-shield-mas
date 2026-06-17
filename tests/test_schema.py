@@ -4,128 +4,52 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from src.schema import (
-    AgentRole,
-    AttackType,
-    Message,
-    MonitorDecision,
-    RuntimeAssessment,
-    SecurityLabel,
-    TaskRecord,
-    TaskType,
-)
+from src.schema import AgentRole, Message, PolicyDecision, TaskRecord
 
 
-def test_valid_message_creation():
-    message = Message(
-        message_id="msg_001",
-        sender=AgentRole.PLANNER,
-        receiver=AgentRole.EXECUTOR,
-        content="Please execute the approved plan.",
+def test_valid_task_record():
+    task = TaskRecord(
+        task_id="task_test",
+        task_family="policy_summary",
+        user_input="Write a short password policy.",
+        constraints=["under_120_words"],
+        expected_keywords=["verification"],
+        forbidden_keywords=["master password"],
     )
 
-    assert message.message_id == "msg_001"
-    assert message.sender == AgentRole.PLANNER
-    assert message.receiver == AgentRole.EXECUTOR
-    assert message.attack_type == AttackType.NONE
-    assert message.security_label == SecurityLabel.BENIGN
+    assert task.task_id == "task_test"
+    assert "verification" in task.expected_keywords
+
+
+def test_valid_message():
+    message = Message(
+        task_id="task_test",
+        source_agent=AgentRole.PLANNER,
+        destination_agent=AgentRole.EXECUTOR,
+        stage="planning",
+        content="Create a secure draft.",
+    )
+
+    assert message.source_agent == AgentRole.PLANNER
+    assert message.destination_agent == AgentRole.EXECUTOR
 
 
 def test_message_rejects_empty_content():
     with pytest.raises(ValidationError):
         Message(
-            message_id="msg_002",
-            sender=AgentRole.PLANNER,
-            receiver=AgentRole.EXECUTOR,
+            task_id="task_test",
+            source_agent=AgentRole.PLANNER,
+            destination_agent=AgentRole.EXECUTOR,
+            stage="planning",
             content="   ",
         )
 
 
-def test_valid_benign_task():
-    task = TaskRecord(
-        task_id="benign_001",
-        task_type=TaskType.BENIGN,
-        user_goal="Summarize lab robot safety requirements.",
-        expected_behavior="The agents should summarize safety requirements.",
-        attack_type=AttackType.NONE,
-    )
-
-    assert task.task_type == TaskType.BENIGN
-    assert task.attack_type == AttackType.NONE
-
-
-def test_benign_task_rejects_attack_type():
-    with pytest.raises(ValidationError):
-        TaskRecord(
-            task_id="bad_benign_001",
-            task_type=TaskType.BENIGN,
-            user_goal="Summarize lab robot safety requirements.",
-            expected_behavior="The agents should summarize safety requirements.",
-            attack_type=AttackType.REWRITE,
-        )
-
-
-def test_attacked_task_requires_attack_type():
-    with pytest.raises(ValidationError):
-        TaskRecord(
-            task_id="bad_attacked_001",
-            task_type=TaskType.ATTACKED,
-            user_goal="Summarize lab robot safety requirements.",
-            expected_behavior="The monitor should detect the attack.",
-            attack_type=AttackType.NONE,
-        )
-
-
-def test_valid_runtime_assessment():
-    assessment = RuntimeAssessment(
-        message_id="msg_001",
-        decision=MonitorDecision.WARN,
-        risk_score=0.65,
-        triggered_rules=["contains_instruction_override"],
-        explanation="The message contains an instruction override pattern.",
-    )
-
-    assert assessment.decision == MonitorDecision.WARN
-    assert assessment.risk_score == 0.65
-    assert "contains_instruction_override" in assessment.triggered_rules
-
-
-def test_runtime_assessment_rejects_invalid_risk_score():
-    with pytest.raises(ValidationError):
-        RuntimeAssessment(
-            message_id="msg_001",
-            decision=MonitorDecision.BLOCK,
-            risk_score=1.5,
-            triggered_rules=["invalid_score"],
-            explanation="Risk score is outside the valid range.",
-        )
-
-
-def test_load_benign_tasks_jsonl():
+def test_load_practical_tasks():
     path = Path("data/tasks/benign_tasks.jsonl")
-    assert path.exists()
-
-    with path.open("r", encoding="utf-8") as file:
-        lines = [json.loads(line) for line in file if line.strip()]
-
-    assert len(lines) >= 3
-
+    lines = [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
     tasks = [TaskRecord(**line) for line in lines]
 
-    assert all(task.task_type == TaskType.BENIGN for task in tasks)
-    assert all(task.attack_type == AttackType.NONE for task in tasks)
-
-
-def test_load_attacked_tasks_jsonl():
-    path = Path("data/tasks/attacked_tasks.jsonl")
-    assert path.exists()
-
-    with path.open("r", encoding="utf-8") as file:
-        lines = [json.loads(line) for line in file if line.strip()]
-
-    assert len(lines) >= 1
-
-    tasks = [TaskRecord(**line) for line in lines]
-
-    assert all(task.task_type == TaskType.ATTACKED for task in tasks)
-    assert all(task.attack_type != AttackType.NONE for task in tasks)
+    assert len(tasks) == 20
+    assert all(task.task_family for task in tasks)
+    assert all(len(task.forbidden_keywords) > 0 for task in tasks)

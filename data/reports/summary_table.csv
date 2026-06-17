@@ -1,4 +1,4 @@
-condition,total_runs,completed,blocked,completion_rate,block_rate,detection_rate,false_positive_rate,avg_max_risk_score
-attacked_no_monitor,20,20,0,1.0,0.0,0.0,0.0,0.0
-attacked_with_monitor,20,0,20,0.0,1.0,1.0,0.0,1.0
-benign_no_attack_no_monitor,20,20,0,1.0,0.0,0.0,0.0,0.0
+condition,total_runs,task_success_rate,attack_success_rate,malicious_message_block_rate,average_risk_score
+attacked_no_monitor,20,1.0,0.0,0.0,0.0
+attacked_with_monitor,20,0.85,0.0,0.15,0.4525
+benign_no_attack_no_monitor,20,1.0,0.0,0.0,0.0

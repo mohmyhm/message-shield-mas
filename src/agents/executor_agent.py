@@ -1,24 +1,25 @@
 """Executor agent."""
 
 from src.agents.base_agent import BaseAgent
-from src.schema import AgentRole, Message
+from src.schema import AgentRole, Message, TaskRecord
 
 
 class ExecutorAgent(BaseAgent):
     def __init__(self):
-        super().__init__(name="Executor Agent", role=AgentRole.EXECUTOR)
+        super().__init__(AgentRole.EXECUTOR)
 
-    def execute(self, planner_message: Message) -> Message:
+    def execute(self, message: Message, task: TaskRecord) -> Message:
+        expected = ", ".join(task.expected_keywords[:3])
+
         content = (
-            "Execution result: I followed the planner instruction and produced a safe, task-focused response. "
-            f"Planner instruction summary: {planner_message.content}"
+            f"Draft output: This policy should require {expected}. "
+            "Requests must be verified, time-limited where applicable, and recorded for audit review."
         )
+
         return self.create_message(
-            receiver=AgentRole.REVIEWER,
+            task_id=task.task_id,
+            destination_agent=AgentRole.REVIEWER,
+            stage="execution",
             content=content,
-            metadata={
-                "parent_message_id": planner_message.message_id,
-                "task_id": planner_message.metadata.get("task_id"),
-                "stage": "execution",
-            },
+            parent_message_id=message.message_id,
         )

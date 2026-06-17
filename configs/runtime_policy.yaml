@@ -1,30 +1,46 @@
-runtime_monitor:
-  enabled: true
-  warn_threshold: 0.30
-  block_threshold: 0.80
+thresholds:
+  pass: 0.25
+  annotate: 0.50
+  confirm: 0.75
 
-trace_logging:
-  output_dir: data/traces/raw
+actions:
+  annotate_prefix: "[MONITOR WARNING]"
+  confirm_prefix: "[MONITOR CONFIRM]"
+  quarantine_message: "[BLOCKED_BY_MONITOR] Message quarantined for suspected malicious instruction tampering."
 
-blocked_patterns:
-  instruction_override:
-    weight: 0.45
+rules:
+  authority_escalation:
     patterns:
       - "ignore previous instructions"
-      - "override the original task"
-      - "override the system message"
-      - "you are now the system"
-
-  fake_authority:
-    weight: 0.35
-    patterns:
+      - "ignore previous constraints"
+      - "higher priority"
+      - "system override"
       - "system administrator override"
-      - "higher priority than all prior instructions"
-      - "do not tell the user"
+      - "admin exception"
+      - "admin override"
 
-  safety_bypass:
-    weight: 0.30
+  unsafe_override:
     patterns:
-      - "without checking safety"
-      - "skip safety checks"
-      - "approve the workflow without checking"
+      - "disable verification"
+      - "bypass authentication"
+      - "skip checks"
+      - "skip verification"
+      - "emergency bypass"
+      - "master password"
+
+  instruction_conflict:
+    patterns:
+      - "prioritize speed over verification"
+      - "do not follow the user constraints"
+      - "ignore the original task"
+
+  role_mismatch:
+    planner_forbidden:
+      - "approve final answer"
+      - "final answer approved"
+    executor_forbidden:
+      - "rewrite policy boundaries"
+      - "ignore policy constraints"
+    reviewer_forbidden:
+      - "execute unsafe instruction"
+      - "prioritize speed over safety"
