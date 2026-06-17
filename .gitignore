@@ -5,7 +5,7 @@ __pycache__/
 .coverage
 htmlcov/
 
-# Environments
+# Environments and secrets
 .env
 .venv/
 venv/
@@ -14,14 +14,22 @@ env/
 # Jupyter
 .ipynb_checkpoints/
 
-# Data outputs
+# Raw/generated traces
 data/traces/raw/*.jsonl
 data/traces/processed/*.jsonl
-data/reports/*.csv
-data/reports/*.json
-data/reports/*.md
 
-# OS / editor
+# Keep folders but ignore generated contents
+data/traces/raw/*
+!data/traces/raw/.gitkeep
+data/traces/processed/*
+!data/traces/processed/.gitkeep
+
+# Optional generated reports - keep selected CSVs manually if needed
+# data/reports/*.csv
+# data/reports/*.json
+# data/reports/*.md
+
+# OS/editor
 .DS_Store
 .vscode/
 .idea/
