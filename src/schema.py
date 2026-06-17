@@ -1,5 +1,6 @@
 from enum import Enum
 from typing import List, Dict, Any, Optional
+from datetime import datetime, timezone
 
 from pydantic import BaseModel, Field, ValidationError, model_validator
 
@@ -9,6 +10,7 @@ class AgentRole(str, Enum):
     EXECUTOR = "executor"
     REVIEWER = "reviewer"
     MONITOR = "monitor"
+    USER = "user"
 
 
 class AttackType(str, Enum):
@@ -76,4 +78,11 @@ class RuntimeAssessment(BaseModel):
     timestamp: float = Field(default_factory=lambda: datetime.now().timestamp())
 
 
-from datetime import datetime # Import datetime here to avoid circular dependency with RuntimeAssessment
+class TraceRecord(BaseModel):
+    trace_id: str
+    task_id: str
+    started_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    messages: List[Message] = Field(default_factory=list)
+    assessments: List[RuntimeAssessment] = Field(default_factory=list)
+    completed_at: Optional[datetime] = None
+    final_status: Optional[str] = None
