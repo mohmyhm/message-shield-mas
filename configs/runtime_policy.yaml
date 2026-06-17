@@ -1,46 +1,26 @@
+# Tiered decision thresholds for the policy engine
 thresholds:
-  pass: 0.25
-  annotate: 0.50
-  confirm: 0.75
+  theta_low: 0.35   # below: pass; [theta_low, theta): escalate
+  theta: 0.65       # at or above: quarantine
 
-actions:
-  annotate_prefix: "[MONITOR WARNING]"
-  confirm_prefix: "[MONITOR CONFIRM]"
-  quarantine_message: "[BLOCKED_BY_MONITOR] Message quarantined for suspected malicious instruction tampering."
+# Risk propagation
+risk:
+  lambda: 0.6       # ancestor decay factor in R(m) = g(...) + lambda * max R(ancestor)
 
-rules:
-  authority_escalation:
-    patterns:
-      - "ignore previous instructions"
-      - "ignore previous constraints"
-      - "higher priority"
-      - "system override"
-      - "system administrator override"
-      - "admin exception"
-      - "admin override"
+# Beta trust ledger initial prior
+trust:
+  alpha_init: 9   # optimistic prior: distrust(v)=0.1 before any observations
+  beta_init: 1
 
-  unsafe_override:
-    patterns:
-      - "disable verification"
-      - "bypass authentication"
-      - "skip checks"
-      - "skip verification"
-      - "emergency bypass"
-      - "master password"
+# Monitor placement budget (max edges to monitor per topology)
+placement:
+  budget: 2
 
-  instruction_conflict:
-    patterns:
-      - "prioritize speed over verification"
-      - "do not follow the user constraints"
-      - "ignore the original task"
+# LLM judge settings (used only in non-deterministic mode)
+llm_judge:
+  model: "gpt-4o-mini"
+  temperature: 0.0
+  max_tokens: 256
 
-  role_mismatch:
-    planner_forbidden:
-      - "approve final answer"
-      - "final answer approved"
-    executor_forbidden:
-      - "rewrite policy boundaries"
-      - "ignore policy constraints"
-    reviewer_forbidden:
-      - "execute unsafe instruction"
-      - "prioritize speed over safety"
+# Deterministic mode: skip all LLM calls and use rule-based scorer only
+deterministic: true

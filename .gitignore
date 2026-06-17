@@ -1,35 +1,13 @@
-# Python
-__pycache__/
-*.py[cod]
-.pytest_cache/
-.coverage
-htmlcov/
-
-# Environments and secrets
 .env
 .venv/
-venv/
-env/
-
-# Jupyter
-.ipynb_checkpoints/
-
-# Raw/generated traces
-data/traces/raw/*.jsonl
-data/traces/processed/*.jsonl
-
-# Keep folders but ignore generated contents
-data/traces/raw/*
-!data/traces/raw/.gitkeep
-data/traces/processed/*
-!data/traces/processed/.gitkeep
-
-# Optional generated reports - keep selected CSVs manually if needed
-# data/reports/*.csv
-# data/reports/*.json
-# data/reports/*.md
-
-# OS/editor
-.DS_Store
-.vscode/
-.idea/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+data/traces/raw/
+*.csv
+!data/reports/.gitkeep
